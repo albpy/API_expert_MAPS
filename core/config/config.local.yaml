@@ -1,0 +1,8 @@
+security:
+  access_token_expire_minutes: 300
+  refresh_token_expire_days: 30
+  private_key: "4870ef6cb2aceded179f0242a0df81fbe8b41fbcbb15747e54c1911d05c5a75e"
+  hash_algo: "HS256"
+  private_key_file: "priv_key.pem"
+credentials:
+  database_url: ""

@@ -7,7 +7,7 @@ BMAPS API built with Python and FastAPI
 ## 📄 Get started
 
 BMAPS API is used to provide end-to-end backend services for the BMAPS application. </br>
-The postman collection is meintained [here](https://api.postman.com/collections/7921355-a0753dc5-9069-41fd-a6f8-9d91a9056108?access_key=PMAT-01HE7WRQPMZBYS6TKVV9HW3PHC).
+The postman collection is meintained [here].
 
 ---
 

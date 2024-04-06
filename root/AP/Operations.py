@@ -76,7 +76,9 @@ class Operations:
         if columnID == "otb_amount":
             if child is None:
                 DATA = DATA.with_columns(otb_amount = (DATA["otb_percent"] * newValue)/100)
-
+            # else:
+            
+            # DATA = DATA.with_columns(otb_amount = Otb.drill_down(DATA, 'otb_amount', newValue))
         if columnID == "otb_vs_ppy_percent": 
             
             if (len(columns_to_filter)) ==1 and ((sub_filter_state ==True)):
@@ -241,10 +243,7 @@ class Operations:
 # 
         return DATA  
 
-    def otb_destribution_(self, DATA : pl.DataFrame, ):
-        
-        
-        return DATA
+
     
     def apply_group_by(self, DATA:pl.DataFrame, data_filter : dict, group : list, sub_filter_state : bool, filter_condition : [Optional] = None):
         """
@@ -560,9 +559,10 @@ class Operations:
         print('we are finding corr ex5')
         try:
             print("we are trying in sorting")
-            sort_columnid = data_filter["sort"]["id"]
+            print(data_filter["sort"],"kjdkajdk")
+            # sort_columnid = data_filter["sort"]["id"]
             if data_filter["sort"]["desc"] == False:
-                datas = data.sort(by =[sort_columnid], descending= False)[filters.page_number*filters.page_size:(filters.page_number+1)*filters.page_size]
+                datas = data.sort(by =[data_filter["sort"]["id"]], descending= False)[filters.page_number*filters.page_size:(filters.page_number+1)*filters.page_size]
             elif data_filter["sort"]["desc"] == True:
                 datas =data.sort(by =[sort_columnid], descending= True)[filters.page_number*filters.page_size:(filters.page_number+1)*filters.page_size]
            

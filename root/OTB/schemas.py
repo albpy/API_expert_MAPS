@@ -75,3 +75,6 @@ class LoginData(BaseModel):
     mail: str
     name: str
    
+# ra_kpi_joined = ra_kpi_joined.with_columns((pl.when(ra_kpi_joined['Budget_date']==datetime(2024,3,27,0,0))
+#                                             .then(datetime(2024,4,3,00,00,00))
+#                                             .otherwise(datetime(2024,4,4,00,00,00))).alias('Budget_date'))

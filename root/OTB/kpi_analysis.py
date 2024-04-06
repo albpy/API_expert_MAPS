@@ -15,28 +15,44 @@ Otb = OTB()
 # print(HEIRARCHY, 'the heirarchy')
 class kp_Operations:
     #
-    def calculate_revised_budget(self, DATA : pl.DataFrame, child : pl.Series, DATA_KPI : pl.DataFrame, row : dict =None):
+    def calculate_revised_budget(self, DATA : pl.DataFrame, child : pl.Series, other_filter_condition : pl.Series, DATA_KPI : pl.DataFrame, row : dict =None):
   
+        print('we are in calculate revised budget')
         #--------------
         budget_amount_summation = DATA['budget_amount'].sum()
         #--------------
-        print(budget_amount_summation, 'budget_amount_summation')
-        print(child, 'child in calculate revised budget')
-        print(type(child), 'child in calculate revised budget')
+        # print(budget_amount_summation, 'budget_amount_summation')
+        # print(child, 'child in calculate revised budget')
+        # print(type(child), 'child in calculate revised budget')
+        # print(other_filter_condition, 'kpi_other')
+        # print(type(child), 'kpi_now')
+
+        print(other_filter_condition.value_counts(), 'kpi_other')
+        print(child.value_counts(), 'kpi_now')
 
         Data_major = DATA.filter(list(child))
 
+        Data_siblings = DATA.filter(pl.col('Check_box') != 1)
+
         Data_major = Data_major.with_columns(Check_box = pl.lit(1).cast(pl.Int8))
+        try:
+            Data_armed = pl.concat([Data_major, Data_siblings])
+        except Exception as e:
+            print(e, 'calculate_revised_error')
+            print(traceback.format_exc())
+        Data_armed_1 = Data_armed.filter(pl.col('Check_box')==1)
 
-        Data_major = Data_major.with_columns(renewed_budget_percent = pl.col('coefficient_score_mix_percent').replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))
+        Data_armed_0 = Data_armed.filter(pl.col('Check_box')==0)
 
-        value_to_find_net_mix = (Data_major['budget_percent']-Data_major['renewed_budget_percent']).sum()
+        Data_armed_1 = Data_armed_1.with_columns(renewed_budget_percent = pl.col('coefficient_score_mix_percent').replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))
+
+        value_to_find_net_mix = (Data_armed_1['budget_percent']-Data_armed_1['renewed_budget_percent']).sum()
 
         print(value_to_find_net_mix, 'value_to_find_net_mix')
 
-        Data_major = Data_major.with_columns(re_assigned_mix = pl.lit(0).cast(pl.Float64))
+        Data_armed_1 = Data_armed_1.with_columns(re_assigned_mix = pl.lit(0).cast(pl.Float64))
 
-        Data_major = Data_major.with_columns(new_budget_mix = pl.col('renewed_budget_percent')+pl.col('re_assigned_mix'))
+        Data_armed_1 = Data_armed_1.with_columns(new_budget_mix = pl.col('renewed_budget_percent')+pl.col('re_assigned_mix'))
         """##User unselected data##"""
 
         Data_minor = DATA.filter(list(child.not_()))
@@ -55,13 +71,14 @@ class kp_Operations:
 
         Data_minor = Data_minor.with_columns(new_budget_mix = pl.col('budget_percent')+pl.col('re_assigned_mix'))
 
-        DATA = pl.concat([Data_major, Data_minor])
-       
+        DATA = pl.concat([Data_armed_1, Data_minor])
+    
         print((DATA['budget_percent']-DATA['renewed_budget_percent']).sum(), 'cdsdsdfsdfsdfds')        
 
         DATA = DATA.with_columns(revised_budget_amount = (pl.col('new_budget_mix')* (pl.col('budget_amount').sum()))/100)
 
-        print(child.value_counts(), 'chuld')
+    
+        # print(child.value_counts(), 'chuld')
 
         return DATA
 
@@ -130,7 +147,7 @@ class kp_Operations:
                 kpi_child = pl.Series([True])
             else:
                 kpi_child = pl.Series(True for elem in range(len(data[group[-1]]))) 
-                print(kpi_child, 'kpi_child in the expansion')
+                # print(kpi_child, 'kpi_child in the expansion')
 
             return kpi_child, group
 
@@ -202,27 +219,13 @@ class kp_Operations:
         row = data_filter['expand']["row"]
         the_value = values['revised_budget_amount'].sum()
         
-        print(group, 'destribute_otb_total')
-        # if list(row)[0] in heirarchy:
-        #     Level_to_destribute = heirarchy.index(list(row)[0]) #must defined here
-        # else:
-        #     matching_elements = [element for element in reversed(group) if element in heirarchy]
-        #     Level_to_destribute = heirarchy.index(matching_elements[0])
-        
+        print(group, 'destribute_otb_total')        
 
         child,other_filter_condition, filter_condition,parent,columns_to_filter, \
             values_to_filter, group,DATA = Otb.table_change_filter(group, heirarchy, data_filter, DATA, row)
         
         stripling = DATA['Check_box'] == 10
         print(group,'group in destribute_otb_total')
-        # increase = the_value - float(row['budget_amount'])
-        
-        # print(stripling.value_counts(), 'val_cnt_strpling')
-        # print(Level_to_destribute, 'level to destribute_otb_total')
-        # print(heirarchy[Level_to_destribute], 'this level')
-        # for neonate in DATA[heirarchy[Level_to_destribute]].unique():
-        #     minor =  DATA[heirarchy[Level_to_destribute]] == neonate
-            # stripling = stripling|minor
         
         if sub_filter_state == True:
             if len(columns_to_filter) == 1:
@@ -247,6 +250,7 @@ class kp_Operations:
                 # print(values, Level_to_destribute)
                 print(values, 'sub_filter_error_Store_caught_here')
                 print(DATA.columns, 'cols sub_filter_error_Store_caught_here')
+                print(row, 'row to understand subfilter state')
                 if row != {}:
                     if group[-1] not in values.columns:
                         print("Not In value columns")

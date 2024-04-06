@@ -175,6 +175,8 @@ def create_ra(forecast_start_date_str,forecast_end_date_str,history_start_date_s
     q = QueryBuilder()
     filtered_ra_trx =  pl.DataFrame(rf.get_library(LIBRARY_NAME).read('filtered_symobl', query_builder=q).data)
     print(filtered_ra_trx.columns, 'colsss_ra')
+    print(filtered_ra_trx.head(), 'colsss_ra___1')
+    # filtered_ra_trx = filtered_ra_trx.sample(100000)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #-------------------------To take total data without primary filters-------------------------------------    
     
@@ -222,6 +224,8 @@ def create_ra(forecast_start_date_str,forecast_end_date_str,history_start_date_s
     filtered_sales_trx: pl.DataFrame = pl.DataFrame(rf.get_library(LIBRARY_NAME).read("sales_filtered", query_builder=q).data)
     filtered_sales_trx = filtered_sales_trx.rename({'channel' : 'Channel'})
     print(filtered_sales_trx.columns,"hedd")
+    # print(filtered_sales_trx.head(),"heaadd")
+    # filtered_sales_trx = filtered_sales_trx.sample(1000)
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Filtering STOCK_TRNX
 
 # {"Channel":filters.sales_channel,"Family":filters.product_family,
@@ -232,7 +236,8 @@ def create_ra(forecast_start_date_str,forecast_end_date_str,history_start_date_s
     print(f"[{ctime()}] [INFO] Applying Joins between Filtered RA TRX and Filtered Sales TRX")
     
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TODO Join
-    
+    # print(filtered_ra_trx.info(),'frt_info')
+    # print(filtered_sales_trx.info(), 'fst_info')
     
     rf.get_library(LIBRARY_NAME).write(
         symbols.RA_SALES_JOIN,
@@ -273,7 +278,11 @@ def form_base_data(df:pd.DataFrame, filters) -> pl.DataFrame:
     df = df.with_columns((df['history_quarter'].fill_null("unknown")))
     df = df.with_columns((df['history_month'].fill_null("")))
     df = df.with_columns((df['history_week'].fill_null("unknown")))
-    df = df.with_columns((df['history_day'].fill_null("unknown")))
+    df = df.with_columns((df['history_day'].fill_null("unknown"))) #.cast(pl.Int8, strict=False)
+    print(df['history_day'].value_counts(), 'history_days_week')
+    # df = df.with_columns(df['history_day'].apply(lambda x: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][x]))
+    print(df['history_day'].value_counts(), 'history_days_week')
+
     df = df.with_columns((df["INVOICEDATE"].cast(pl.Date).cast(pl.Utf8).fill_null("unknown")))  
     df = df.with_columns((df["Budget_date"].cast(pl.Date).cast(pl.Utf8)))  
 
@@ -405,7 +414,9 @@ def form_base_data(df:pd.DataFrame, filters) -> pl.DataFrame:
     df = df.with_columns(((df["net_sales_ly"]/sums)*100).alias('net_sales_mix_percent')) # -->
 
     df = df.with_columns((df["net_sales_ly"]/df['sold_qty_ly']).alias("final_price"))
-    df = df.with_columns((df['gross_sales_ly']/df['sold_qty_ly']).alias("initial_average_retail_price"))
+    # df = df.with_columns((df['gross_sales_ly']/df['sold_qty_ly']).alias("initial_average_retail_price"))
+    df = df.with_columns((df['COSTPRICE']*df['BudgetCost']/df['BudgetCost']).alias("initial_average_retail_price"))
+
 
     df = df.with_columns((df['gross_sales_ty']/df['quantity_actuals']).alias("initial_average_retail_price_ty"))
     df = df.with_columns((df['gross_sales_ly']/df['sold_qty_ly']).alias("initial_average_retail_price_ly"))
@@ -450,7 +461,8 @@ def form_base_data(df:pd.DataFrame, filters) -> pl.DataFrame:
     df = df.with_columns(pl.col("adjusted_budget_gross_margin_percent").alias("budget_gross_margin_percent"))
 #----------------------------------------------------------AVAILABE STOCK CALCULATION--------------------------------------------------------------
     print(df['stock_date'])
-    fill_date = df['stock_date'].dt.max()
+    # fill_date = df['stock_date'].dt.max()
+    fill_date = datetime(2024,2,26,00,00,00)
     print(fill_date, type(fill_date), 'filling_date')
     df = df.with_columns(stock_date = pl.col('stock_date').fill_null(fill_date))
     forecast_date = filters.forecast_date_range.fro
@@ -459,14 +471,14 @@ def form_base_data(df:pd.DataFrame, filters) -> pl.DataFrame:
     #-------------------------------------------------------------------
     if date.today() < forecast_date_as_date:
         print('budget_stock')
-        df = df.with_columns((pl.when(df['budget_date'].cast(pl.Date)>date.today(), df['budget_date'].cast(pl.Date)<forecast_date_as_date)
+        df = df.with_columns((pl.when(df['Budget_date'].cast(pl.Date, strict = False)>date.today(), df['Budget_date'].cast(pl.Date, strict = False)<forecast_date_as_date)
                               .then(df['budget_qty'])
                               .otherwise(0)).alias('budget_qty_to_subtract'))
         df = df.with_columns(stock_on_hand_qty = pl.col('closing_stock')-pl.col('to_calculate_the_stock_till_now')-pl.col('budget_qty_to_subtract'))
-        df = df.with_columns((pl.when(df['History_date'].cast(pl.Date)==(forecast_date_as_date-timedelta(days = 365)))
+        df = df.with_columns((pl.when(df['History_date'].cast(pl.Date, strict = False)==(forecast_date_as_date-timedelta(days = 365)))
                                       .then(df['closing_stock'])
                                       .otherwise(0)).alias('stock_on_hand_qty_ly'))
-        df = df.with_columns((pl.when(df['History_date'].cast(pl.Date)==(forecast_date_as_date-timedelta(days = 730)))
+        df = df.with_columns((pl.when(df['History_date'].cast(pl.Date, strict = False)==(forecast_date_as_date-timedelta(days = 730)))
                                       .then(df['closing_stock'])
                                       .otherwise(0)).alias('stock_on_hand_qty_lly'))
                             
@@ -502,9 +514,3 @@ def inititalize_columns(df:pl.DataFrame,gloabal_vars:OTB) ->pl.DataFrame:
         df = df.with_columns((df[col].replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias(col))
 
     return df
-
-    
-
-
-
-    

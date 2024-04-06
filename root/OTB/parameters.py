@@ -21,19 +21,19 @@ class OTB():
                        'SubCategory', 'ExtendedSubCategory', 'SubCategorySupplier', 'AssemblyCodeNickName', 
                         'Status', 'ENDOFLife','Description', 'ITEMID','budget_month','budget_week','Budget_date', 'StoreId','Store']
                         
-    AVG_COLS: list    = ['final_price','FirstMargin%','act_forecast_vs_budget_percent',
+    AVG_COLS: list    = ['final_price','act_forecast_vs_budget_percent','ly_margin_percent',
                         'SalesActualsByForecast', 'LYvsACT_FCT%','initial_average_retail_price',
                         'ProposedSellThru%','budget_gross_margin_percent', 'Logistic%','adjusted_budget_gross_margin_percent','MarkdownValue','Markdown%',
                         ]
 
     SUM_COLS: list    = ['budget_amount','budget_cost', 'deficit','Original_BudgetAmount', 'budget_percent','relative_budget_percent', 'History_Net_Sales', 
                         'budget_vpy', 'budget_vppy', 'budget_qty' ,'ACT_FCT','Original_BudgetCostofGoods', 'PO',
-                        'unit_buy_by_sku', 'COSTPRICE', 'Historical_Gross_Margin', 'sales_actual',
+                         'COSTPRICE', 'Historical_Gross_Margin', 'sales_actual',
                         'stock_on_hand_qty','PurchasedRetailValueGrossSale','StockatRetailPrice', 
                         'net_sales_ly', 'net_sales_lly', 'gross_sales', 'gross_sales_ly',
                         'total_sku_count',
                         'SupplyCost',
-                        'SALESQTY', 'DisplayItem', 'DisplayItemValue', 'COR_valueENDOfLifeStock','TYForecast', 'PurchaseRetailValueatGrossSale', 'OTBorPurchaseCost','OTBquantity',
+                        'SALESQTY', 'DisplayItemQty', 'DisplayItemValue', 'COR_EOLStock_value','TYForecast', 'PurchaseRetailValueatGrossSale', 'OTBorPurchaseCost','OTBquantity',
                         #~~QTY_COl
                         'Budget_Qty_Perc', 'budget_qty_ACT_FCT_perc', 'budget_vs_py_qty_percent', 'budget_vs_ppy_qty_percent', 'QTY_Buy_By_SKU', 
                         # 'total_sku_count',
@@ -62,25 +62,28 @@ class OTB():
                         # budget/ sku
                         'budget_per_sku_qty_total',
                         # qty cols
-                        'budget_qty_ly', 'budget_qty_ty', 'budget_qty_lly', 'stock_on_hand_qty_ly', 'stock_on_hand_qty_lly'
+                        'budget_qty_ly', 'budget_qty_ty', 'budget_qty_lly', 'stock_on_hand_qty_ly', 'stock_on_hand_qty_lly',
                         # budget costs
                         #'budget_cost_ty','budget_cost_ly', 'budget_cost_lly'
-                        ]
+                        'FirstMargin%']
     
-    FLOAT_COLS: list  = ['final_price', 'initial_average_retail_price','budget_percent', 'deficit', 'unit_buy_by_sku', 'relative_budget_percent', 'act_forecast_vs_budget_percent', 'Historical_Gross_Margin', 'SalesActualsByForecast',
+    FLOAT_COLS: list  = ['final_price', 'initial_average_retail_price','budget_percent', 'deficit',  'relative_budget_percent', 'act_forecast_vs_budget_percent', 'Historical_Gross_Margin', 'SalesActualsByForecast',
                         'budget_gross_margin_percent','adjusted_budget_gross_margin_percent', 'budget_vpy', 'budget_vppy', 'ProposedSellThru%',
                         'FirstMargin%', 'PurchasedRetailValueGrossSale','PurchaseRetailValueatGrossSale','TYForecast', 'Logistic%','Markdown%','LYvsACT_FCT%','PO',
                         'OTBorPurchaseCost','budget_qty','OTBquantity']
     # 'History_Net_Sales' , 
     INT_COLS: list    = ['sales_actual']
                         #,'unit_buy_by_sku', 'SKU_COUNT', 'unit_buy_by_sku_total', 'BudgetCostofGoods', 'COSTPRICE', 
-                        # 'Displ#ayItem', 'COR_valueENDOfLifeStock', 'COSTPRICE']
+                        # 'Displ#ayItem', 'COR_EOLStock_value', 'COSTPRICE']
     SCORES: dict      = {'sale':'article_score_sale', 'abc' : 'article_score_abc', 'ae':'article_score_ae', 'speed': 'article_score_speed', 'terminal' : 'article_score_terminal', 'margin' : 'article_score_margin', 
                         'sell' : 'article_score_sell', 'markdown':'article_score_markdown', 'core' :'article_score_core', 'quartile':'article_score_quartile', 'sortimeter':'article_score_sortimeter'}
 
     HEIRARCHY: list   = ['Channel','Family','SubFamily','Supplier','Category','DOM_COMM','SubCategory', 'ExtendedSubCategory', 'SubCategorySupplier', 'AssemblyCodeNickName', 
                         'Status', 'ENDOFLife','Description', 'ITEMID']
-    SUB_FILTER: dict  = {'region':[], 'season':[], 'area':[], 'budget_year':[],'historical_year':[],'month':[],'week':[],'date':[], 'article_scores' : []}
+    # SUB_FILTER: dict  = {'region':[], 'season':[], 'area':[], 'budget_year':[],'historical_year':[],'month':[],'week':[],'date':[], 'article_scores' : []}
+    
+    SUB_FILTER = {'store':[],'region':[],'season':[],"area":[],'Channel':[],'budget_year':[],'Quarter':[],'month':[],'week':[],'date':[],'Day':[],
+                    'historical_year':[],'history_Quarter':[],'history_month':[],'history_week':[],'history_Day':[],'history_dates':[],'article_score':[]}
     # 'Channel', 'Region', 'StoreId', 'Store', 'Department',  'Family', 'SubFamily', 
     #                                        'Supplier','Category', 'DOM_COMM',  'SubCategory', 'ExtendedSubCategory', 'SubCategorySupplier', 'AssemblyCodeNickName','Status', 'ENDOFLife', 
                                         #    'Description','ITEMID','historical_year', 'Budget_Year','Quarter','Month','Week','Budget_date','Day',
@@ -96,31 +99,31 @@ class OTB():
                                             # KPI
                                             'revised_budget_amount', 'new_budget_mix',
                                             
-                                            'budget_amount', 'deficit' ,'budget_percent', 'relative_budget_percent', 'budget_cost', 'act_forecast_vs_budget_percent', 
-                                            'budget_qty', 'budget_vpy','budget_vppy', 'ACT_FCT', 'initial_average_retail_price', 
-                                            'unit_buy_by_sku_total', 'unit_buy_by_sku', 'total_sku_count',  'units_per_sku_total', 'budget_per_sku_qty_total', 
-                                            #'ly_margin_percent, 
+                                            'budget_amount', 'deficit' ,'budget_percent', 'relative_budget_percent',  'act_forecast_vs_budget_percent', 
+                                            'budget_vpy','budget_vppy','initial_average_retail_price', 
+                                            'unit_buy_by_sku_total','total_sku_count',  'units_per_sku_total', 'budget_per_sku_qty_total', 
+                                            'ly_margin_percent', 
                                             'budget_gross_margin_percent', 'adjusted_budget_gross_margin_percent', 'BudgetCostofGoods', 'Logistic%', 'SupplyCost',
                                             'FirstMargin%', 'ProposedSellThru%', 'PurchasedRetailValueGrossSale',
                                             # 'STOCK As on LY Year End @ Retail Value',
-                                            'DisplayItem', 'COR_valueENDOfLifeStock', 'TYForecast',  'PurchaseRetailValueatGrossSale',  'OTBorPurchaseCost','OTBquantity',
+                                            'DisplayItemQty', 'COR_EOLStock_value', 'TYForecast',  'PurchaseRetailValueatGrossSale',  'OTBorPurchaseCost','OTBquantity',
                                             # Purchase Cost,
-                                            'sales_actual',   'SALESQTY' ,  
+                                            'sales_actual',  'ACT_FCT',  'SALESQTY' ,  
+                                            'stock_on_hand_qty', 'stock_on_hand_qty_ly', 'stock_on_hand_qty_lly', 'StockatRetailPrice',  'DisplayItemValue',
                                             # budget qty
-                                            'budget_qty_ty', 'budget_qty_ly', 'budget_qty_lly',
+                                            'budget_qty_ty', 'budget_qty_ly', 'budget_qty_lly', 
                                             # budget cost
                                     #        'budget_cost_ty','budget_cost_ly', 'budget_cost_lly',
                                             # 'Sales Budget',  'ACT_FCTvsBudget_perc'
-                                            'net_sales_ly', 'LYvsACT_FCT%', 'initial_average_retail_price_ly', 'unit_buy_by_sku_ly', 'total_sku_count_ly',
+                                            'net_sales_ly', 'cost_of_goods_ly','LYvsACT_FCT%', 'initial_average_retail_price_ly', 'unit_buy_by_sku_ly', 'total_sku_count_ly',
                                             'units_per_sku_ly', 'SALES_ACT_FCT_per_sku_ly',
                                             
                                             'net_sales_lly', 'LLYvsaCT_FCT%', 'initial_average_retail_price_lly', 'unit_buy_by_sku_lly', 'total_sku_count_lly',
                                             'units_per_sku_lly', 'SALES_ACT_FCT_per_sku_lly',
                                             
             
-                                            'final_price', 'MarkdownValue', 'gross_sales', 'gross_sales_ly', 'Markdown%', 'stock_on_hand_qty', 'stock_on_hand_qty_ly', 'stock_on_hand_qty_lly', 
-                                            'StockatRetailPrice',  'DisplayItemValue', 
-                                            
+                                            'final_price', 'MarkdownValue', 'gross_sales', 'gross_sales_ly', 'Markdown%', 
+
                                             'article_score_sale', 'article_score_abc', 'article_score_ae', 'article_score_speed', 'article_score_terminal', 'article_score_margin', 'article_score_sell', 'article_score_markdown', 'article_score_core', 
                                             'article_score_quartile', 'article_score_sortimeter', 'coefficient_score', 'coefficient_score_mix_percent'],
 
@@ -128,7 +131,7 @@ class OTB():
                                             
                         'BudgetCost':       ['Channel', 'Region', 'StoreId', 'Store', 'Department', 'Category', 'Family', 'SubFamily', 'Supplier',
                                             'DOM_COMM', 'SubCategory', 'ExtendedSubCategory', 'SubCategorySupplier', 'AssemblyCodeNickName',
-                                            'ITEMID', 'Status', 'ENDOFLife', 'Description', 'Budget_Year', 'historical_year',
+                                            'ITEMID', 'Status', 'ENDOFLife', 'Description', 'Budget_Year', 'historical_year','budget_cost',
                                             'budget_cost_percent', 'budget_vs_act_forecast_cost_percent', 'cost_budget_per_sku', 'BudgetCostofGoods',
                                             'budget_vs_py_cost_percent', 'budget_vs_ppy_cost_percent', 'cost_mix_percent', 'cost_actuals', 'cost_act_forecast',
                                             'cost_act_forecast_vs_budget_perc', 'cost_of_goods_ly', 'cost_act_forecast_vs_ly_percent', 'cost_of_goods_lly', 
@@ -139,7 +142,7 @@ class OTB():
                                             'ITEMID', 'Status', 'ENDOFLife', 'Description', 'Budget_Year', 'historical_year',
                                             'budget_qty', 'Budget_Qty_Perc', 'budget_qty_ACT_FCT_perc', 'budget_vs_py_qty_percent', 'budget_vs_ppy_qty_percent', 'QTY_Buy_By_SKU', 
                                             # 'Quantity_Buy_By_SKU', 
-                                            'total_sku_count', 'unit_buy_by_sku', 'unit_buy_by_sku_total', 'SKU_COUNT', 'quantity_mix_percent', 'quantity_actuals',
+                                            'total_sku_count', 'unit_buy_by_sku_total', 'SKU_COUNT', 'quantity_mix_percent', 'quantity_actuals',
                                             'quantity_act_forecast', 'quantity_act_forecast_vs_budget_percent', 'sold_qty_ly', 'quantity_act_forecast_vs_ly_percent',
                                             'quantity_act_or_forecast_per_sku', 'quantity_ppy', 'quantity_act_forecast_vs_ppy_percent'],
                                             
@@ -156,7 +159,7 @@ class OTB():
                                             'budget_gross_margin_percent', 'Historical_Gross_Margin', 'adjusted_budget_gross_margin_percent',
                                             'FirstMargin%', 'ProposedSellThru%']
                         }
-    EDITABLE_COLS : list = ['budget_percent', 'act_forecast_vs_budget_percent', 'budget_vpy','budget_vppy', 'budget_qty', 'adjusted_budget_gross_margin_percent', 'Markdown%', 'Logistic%', 'ProposedSellThru%', 'DisplayItem', 'COR_valueENDOfLifeStock' ]
+    EDITABLE_COLS : list = ['budget_percent', 'act_forecast_vs_budget_percent', 'budget_vpy','budget_vppy', 'budget_qty', 'adjusted_budget_gross_margin_percent', 'Markdown%', 'Logistic%', 'ProposedSellThru%', 'DisplayItemQty', 'COR_EOLStock_value' ]
     time_columns = ['historical_year', 'Budget_Year']
     ARTICLE_SCORES : list = ['sale', 'abc', 'ae', 'speed', 'terminal', 'margin', 'sell', 'markdown', 'core', 'quartile', 'sortimeter']
     
@@ -211,11 +214,14 @@ class OTB():
         df = df.with_columns(pl.col('initial_average_retail_price_ty').replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
         df = df.with_columns(pl.col('initial_average_retail_price_ly').replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
         df = df.with_columns(pl.col('initial_average_retail_price_lly').replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
+        print(df['initial_average_retail_price'].sum(), 'init_av_ret_price')
         df = df.with_columns(((pl.col('LINEAMOUNT')/pl.col('SALESQTY')).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('NetPrice'))
 
         df = df.with_columns(((pl.col('Budget_date').cast(pl.Date))).alias('dates'))
         df = df.with_columns(Budget_Year = pl.col("dates").dt.strftime('%Y').cast(pl.Utf8))
-        df = df.with_columns(((pl.col('dates').dt.weekday().cast(pl.Utf8))).alias('budget_day'))
+        df = df.with_columns(((pl.col('dates').dt.weekday().cast(pl.Int8))).alias('budget_day'))
+        df = df.with_columns(df['budget_day'].apply(lambda x: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][x]))
+        print(df['budget_day'].value_counts(), 'budget_day empty')
         df = df.with_columns(((pl.col('dates').dt.quarter().cast(pl.Utf8))).alias('budget_quarter'))
 
         df = df.with_columns(((pl.col('dates').dt.strftime('%B'))).alias('budget_month')) # Extract Abbreviated month name (Jan, Feb, Mar).
@@ -225,43 +231,51 @@ class OTB():
         
         df = df.with_columns(Price = pl.col('final_price').cast(pl.Float64).fill_nan(0))
 
-        df = df.with_columns(pl.lit(0).alias('DisplayItem'))
+        df = df.with_columns(pl.lit(0).alias('DisplayItemQty'))
 
         df = df.with_columns(((pl.lit(0.05))).alias('Logistic%'))
         
         df = df.with_columns((pl.col('Logistic%').cast(float)*100).replace({np.inf : 0, -np.inf:0}).fill_nan(0).fill_null(0).alias('Logistic%'))
         
-        df = df.with_columns((pl.col('DisplayItem') * pl.col('initial_average_retail_price')).alias('DisplayItemValue'))
+        df = df.with_columns((pl.col('DisplayItemQty') * pl.col('initial_average_retail_price')).alias('DisplayItemValue'))
 
-        df = df.with_columns((pl.lit(0).alias('COR_valueENDOfLifeStock')))
+        df = df.with_columns((pl.lit(0).alias('COR_EOLStock_value')))
 
-        df = df.with_columns(StockatRetailPrice = (pl.col('initial_average_retail_price') * pl.col('stock_on_hand_qty')).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))
-        
+        # df = df.with_columns(StockatRetailPrice = (pl.col('initial_average_retail_price') * pl.col('stock_on_hand_qty')).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))
         
 
         df = df.with_columns(((pl.col('initial_average_retail_price') * pl.col('SALESQTY')) - (pl.col('NetPrice') * pl.col('SALESQTY'))).alias('Discount'))
 
         df = df.with_columns(((pl.col('Discount')/(pl.col('budget_amount') + pl.col('Discount'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('Markdown%'))
 
-        df = df.with_columns((((pl.col('StockatRetailPrice')) - (pl.col('DisplayItemValue')) - (pl.col('COR_valueENDOfLifeStock'))).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('TYForecast'))       
+        # df = df.with_columns((((pl.col('StockatRetailPrice')) - (pl.col('DisplayItemValue')) - (pl.col('COR_EOLStock_value'))).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('TYForecast'))       
        
         df = df.with_columns((((pl.col('budget_amount').cast(pl.Float64).fill_nan(0))-((pl.col('budget_amount')*pl.col('budget_gross_margin_percent'))/100).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))).alias('BudgetCostofGoods'))
 
         df = df.with_columns(SupplyCost = (pl.col('BudgetCostofGoods')-(pl.col('BudgetCostofGoods')*(pl.col('Logistic%')/100))).replace({np.inf:0, -np.inf:0}).fill_nan(0).cast(float))
         
-        df = df.with_columns(((((pl.col('budget_amount'))-(pl.col('SupplyCost')))/(pl.col('budget_amount'))).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)*100).alias('FirstMargin%'))        
+        # df = df.with_columns(((((pl.col('budget_amount')-pl.col('SupplyCost')))/(pl.col('budget_amount'))).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)*100).alias('FirstMargin%'))        
+        # df = df.with_columns(((((pl.col('budget_amount')-pl.col('SupplyCost')))/(pl.col('budget_amount').sum())).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)).alias('FirstMargin%'))        
+
+        # print("****************")
+        # print(df.select(pl.col(['budget_amount', 'SupplyCost']).sum()))
+        # print((df['budget_amount']-df['SupplyCost'])/df['budget_amount'].sum())
+        # print(df['FirstMargin%'].sum())
+        # print(df['FirstMargin%'].mean())
+        # print("************")
+
 
         # df = df.with_columns(((pl.col('cost_of_goods_ly')/(pl.col('cost_of_goods_ly')+pl.col('stock_cost_ly')).replace({np.inf:0, -np.inf:0}).fill_nan(0))*100).alias('LYsellThru%'))
 
         df = df.with_columns((((pl.col('cost_of_goods_ly')/(pl.col('cost_of_goods_ly')+pl.col('stock_cost_ly'))).replace({np.inf:0, -np.inf:0}).fill_nan(0))*100).alias('ProposedSellThru%'))   
 
-        df = df.with_columns(PurchasedRetailValueGrossSale = ((pl.col('budget_amount')/(100-pl.col('Markdown%')))/(pl.col('ProposedSellThru%')/100)).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
+        # df = df.with_columns(PurchasedRetailValueGrossSale = ((pl.col('budget_amount')/(100-pl.col('Markdown%')))/(pl.col('ProposedSellThru%')/100)).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
 
-        df = df.with_columns((((pl.col('PurchasedRetailValueGrossSale'))-pl.col('TYForecast')).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('PurchaseRetailValueatGrossSale'))
+        # df = df.with_columns((((pl.col('PurchasedRetailValueGrossSale'))-pl.col('TYForecast')).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('PurchaseRetailValueatGrossSale'))
 
-        df = df.with_columns(OTBorPurchaseCost=(pl.col('PurchaseRetailValueatGrossSale')*(100-pl.col('FirstMargin%')).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)))
+        # df = df.with_columns(OTBorPurchaseCost=(pl.col('PurchaseRetailValueatGrossSale')*(100-pl.col('FirstMargin%')).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)))
 
-        df = df.with_columns(OTBorPurchaseCost = pl.col('OTBorPurchaseCost').cast(float).fill_nan(0))
+        # df = df.with_columns(OTBorPurchaseCost = pl.col('OTBorPurchaseCost').cast(float).fill_nan(0))
 
         df = df.with_columns(Original_BudgetAmount = pl.col('budget_amount'))
         
@@ -310,7 +324,7 @@ class OTB():
 
         # depending on the year selected...
         
-        df = df.with_columns(Purchase_RetailValueGrossSale = (pl.col('PurchasedRetailValueGrossSale').cast(pl.Float64)-pl.col('TYForecast')).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0).cast(float))
+        # df = df.with_columns(Purchase_RetailValueGrossSale = (pl.col('PurchasedRetailValueGrossSale').cast(pl.Float64)-pl.col('TYForecast')).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0).cast(float))
         
         df = df.with_columns(((pl.col('History_Net_Sales').cast(pl.Float64))).alias('History_Net_Sales'))
         
@@ -344,22 +358,22 @@ class OTB():
 
         df = df.with_columns(((pl.col('budget_qty')/pl.col('total_sku_count')-1).replace({np.inf:0, -np.inf:0}).fill_nan(0)).alias('QTY_Buy_By_SKU'))
 
-        try:
-            df = df.with_columns(((pl.col('budget_qty')/pl.col('total_sku_count')).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('unit_buy_by_sku'))
-        except Exception as e:
-            print(f"error units_per_sku is : {e}")
+        # try:
+        #     df = df.with_columns(((pl.col('budget_qty')/pl.col('total_sku_count')).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('unit_buy_by_sku'))
+        # except Exception as e:
+        #     print(f"error units_per_sku is : {e}")
         
         df = df.with_columns(((pl.col('budget_qty_ly')/pl.col('total_sku_count_ly')).replace({np.inf:0, -np.inf:0}).fill_nan(0)).alias('unit_buy_by_sku_ly'))
 
         df = df.with_columns(((pl.col('budget_qty_lly')/pl.col('total_sku_count_lly')).replace({np.inf:0, -np.inf:0}).fill_nan(0)).alias('unit_buy_by_sku_lly'))
 
-        df = df.with_columns((((pl.col('LINEAMOUNT'))/pl.col('total_sku_count')).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('units_per_sku_total'))
+        df = df.with_columns((((pl.col('budget_qty'))/pl.col('total_sku_count')).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('units_per_sku_total'))
 
         df = df.with_columns(((pl.col('net_sales_ly')/pl.col('total_sku_count_ly')).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('units_per_sku_ly'))
 
         df = df.with_columns(((pl.col('net_sales_lly')/pl.col('total_sku_count_lly')).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('units_per_sku_lly'))
 
-        df = df.with_columns(((pl.col('budget_qty')/pl.col('total_sku_count')).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('unit_buy_by_sku_total'))
+        df = df.with_columns(((pl.col('budget_amount')/pl.col('total_sku_count')).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('unit_buy_by_sku_total'))
         
         df = df.with_columns((((pl.col('sold_qty_ly')*100)/(pl.col('sold_qty_ly').sum())).replace({np.inf:0, -np.inf:0}).fill_nan(0)).alias('quantity_mix_percent'))
         
@@ -440,12 +454,18 @@ class OTB():
 
         df = df.with_columns(((pl.col('budget_gross_margin')/(pl.col('lly_margin_percent')*100)).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)*100).alias('budget_vs_ppy_margin_percent'))
 
-        df = df.with_columns((((pl.col('PurchaseRetailValueatGrossSale'))/(pl.col('initial_average_retail_price'))).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('OTBquantity'))
+        # df = df.with_columns((((pl.col('PurchaseRetailValueatGrossSale'))/(pl.col('initial_average_retail_price'))).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('OTBquantity'))
         
         df = df.with_columns((pl.lit(0.0)).alias("coefficient_score"))
         
         df = df.with_columns(coefficient_score_mix_percent = (pl.col('coefficient_score')/pl.col('coefficient_score').sum()).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)*100)
 
+        df = df.with_columns(((pl.col('sales_actual').cast(pl.Int64))))
+        
+        df = df.with_columns(((pl.col('budget_amount').cast(pl.Float64)+pl.col('sales_actual').cast(pl.Float64))).alias('ACT_FCT'))
+
+        df = df.with_columns(((((pl.col('budget_amount'))/(pl.col('ACT_FCT'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)) *100).alias('act_forecast_vs_budget_percent'))
+        print(df.select(pl.all().is_null().sum()).to_dicts()[0], 'print the nullsdf')
         group = []
 
         self.SUB_FILTER = self.call_filter(df,self.SUB_FILTER,group,df)
@@ -455,7 +475,7 @@ class OTB():
         
         # self.DATA[self.MAX_COLS]        = self.DATA[self.MAX_COLS].astype(str)
         # self.DATA[self.MAX_COLS] = self.DATA[self.MAX_COLS].cast(pl.Utf8)
-        print(self.DATA.select(pl.all().null_count()).to_dicts()[0],'lst DATA null')
+        # print(self.DATA.select(pl.all().null_count()).to_dicts()[0],'lst DATA null')
 
         return self.DATA
 
@@ -503,8 +523,21 @@ class OTB():
                         # SUB_FILTER['i']   = list(data[v].astype(str).unique())
                         SUB_FILTER['i']   = list(data[v].cast(str).unique())
                     else:
-                        SUB_FILTER[i]        = list(data[v].unique())
-            
+                        print(i, v, 'need to sort') # Need to sort.
+                        if v in ['history_week', 'History_date']:
+                            # SUB_FILTER[i]        = list(data[v].unique())
+                            if v== 'History_date':
+                                SUB_FILTER[i] = sorted(list(data[v].unique()), key=lambda x: (datetime.strptime(x, '%Y-%m-%d') if '-' in x else datetime.strptime('1900-01-01', '%Y-%m-%d')))
+                                print(SUB_FILTER[i], 'datesss')
+                            else:
+                                SUB_FILTER[i] = sorted(list(data[v].unique()), key = lambda x: (int(x) if x.isdigit() else 0))
+                                # print(SUB_FILTER[i], 'number week')
+                        else:
+                            print(v, 'other vs', i)
+                            SUB_FILTER[i]        = list(data[v].unique())
+                            if i == 'history_Day' or i == 'history_month':
+                                SUB_FILTER[i] = [day.strip() if day != 'unknown' else 'unknown' for day in SUB_FILTER[i]]
+                            print(SUB_FILTER[i], type(SUB_FILTER[i][0]))
                 SUB_FILTER['article_score'] = ['sale', 'abc', 'ae', 'speed', 'terminal', 'margin', 'sell',
         'markdown', 'core', 'quartile', 'sortimeter']
 
@@ -552,11 +585,11 @@ class OTB():
         if wr:
             data = data.with_columns(((pl.col('budget_amount').sum()) *0.01* (pl.col('budget_percent'))).alias('budget_amount'))
         
-        data = data.with_columns(((pl.col('sales_actual').cast(pl.Int8))))
+        # data = data.with_columns(((pl.col('sales_actual').cast(pl.Int64))))
         
-        data = data.with_columns(((pl.col('budget_amount').cast(pl.Float64)+pl.col('sales_actual').cast(pl.Float64))).alias('ACT_FCT'))
+        # data = data.with_columns(((pl.col('budget_amount').cast(pl.Float64)+pl.col('sales_actual').cast(pl.Float64))).alias('ACT_FCT'))
         
-        data = data.with_columns(((((pl.col('budget_amount'))/(pl.col('ACT_FCT'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)) *100).alias('act_forecast_vs_budget_percent'))
+        # data = data.with_columns(((((pl.col('budget_amount'))/(pl.col('ACT_FCT'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)) *100).alias('act_forecast_vs_budget_percent'))
         
         data = data.with_columns((((pl.col('net_sales_ly')/(pl.col('net_sales_ly').sum())).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))*100).alias('LYvsACT_FCT%'))
         
@@ -567,6 +600,31 @@ class OTB():
         data = data.with_columns((((pl.col('LLYvsaCT_FCT%')/(pl.col('total_sku_count_lly'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))*100).alias('SALES_ACT_FCT_per_sku_lly'))
 
         data = data.with_columns((pl.col('initial_average_retail_price')).alias('initial_average_retail_price'))
+
+        data = data.with_columns(((((pl.col('budget_amount')-pl.col('SupplyCost')))/(pl.col('budget_amount'))).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)).alias('FirstMargin%'))        
+
+        data = data.with_columns(PurchasedRetailValueGrossSale = ((pl.col('budget_amount')/(100-pl.col('Markdown%')))/(pl.col('ProposedSellThru%')/100)).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
+
+        data = data.with_columns(StockatRetailPrice = (pl.col('initial_average_retail_price') * pl.col('stock_on_hand_qty')).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))
+        
+        data = data.with_columns((((pl.col('StockatRetailPrice')) - (pl.col('DisplayItemValue')) - (pl.col('COR_EOLStock_value'))).replace({np.inf:0,-np.inf:0}).fill_nan(0)).alias('TYForecast'))       
+
+        data = data.with_columns((((pl.col('PurchasedRetailValueGrossSale'))-pl.col('TYForecast')).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('PurchaseRetailValueatGrossSale'))
+
+        data = data.with_columns((((pl.col('PurchaseRetailValueatGrossSale'))/(pl.col('initial_average_retail_price'))).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('OTBquantity'))
+
+        data = data.with_columns(OTBorPurchaseCost=(pl.col('PurchaseRetailValueatGrossSale')*(100-pl.col('FirstMargin%')).replace({-np.inf:0, np.inf:0}).fill_nan(0).fill_null(0)))
+
+        data = data.with_columns(OTBorPurchaseCost = pl.col('OTBorPurchaseCost').cast(float).fill_nan(0))
+
+
+
+        # df = df.with_columns(Purchase_RetailValueGrossSale = (pl.col('PurchasedRetailValueGrossSale').cast(pl.Float64)-pl.col('TYForecast')).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0).cast(float))
+
+
+        print(data.select(pl.all().is_null().sum()).to_dicts()[0], 'print the nullsdf')
+
+
 #********************************************Polaris*************************************************************************************************************************************
         return data
     
@@ -914,8 +972,8 @@ class OTB():
         child = filter_condition
         other_filter_condition = None
         parent = None
-        print('chhh', child)
-        print(filter_condition, 'filterconti')
+        # print('chhh', child)
+        # print(filter_condition, 'filterconti')
         
         # Iterate over columns and values and create parent/child and other filter condition for table changes
         print('columns_to_filter::',  columns_to_filter)
@@ -934,7 +992,7 @@ class OTB():
                 parent = child
                 other_filter_condition = child & (DATA[col] != val)
                 child = child & (DATA[col] == val)
-        print(child, 'and' ,parent)
+        # print(child, 'and' ,parent)
         return child,other_filter_condition,filter_condition,parent,columns_to_filter,values_to_filter,group,DATA
 
     def change_percent(self, grouped_df,other_grouped_df,increase,colID):
@@ -1087,33 +1145,33 @@ class OTB():
         # df.head(0).to_sql(table_name, con=db.bind, if_exists='replace', index=False)
         print(df.columns.to_list(), 'sooooooooooo')
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # print(f"{ctime()} - csv conversion begins")
-        # df.to_csv(f"{table_name}.csv",header=True,index=False,sep='\t')
-        # print(f"{ctime()} - csv conversion ends")
-        # print(f"{ctime()} - writing data to db begins")
+        print(f"{ctime()} - csv conversion begins")
+        df.to_csv(f"{table_name}.csv",header=True,index=False,sep='\t')
+        print(f"{ctime()} - csv conversion ends")
+        print(f"{ctime()} - writing data to db begins")
 
         
         
-        # with db.bind.raw_connection().cursor() as cursor:
-        #     try:
-        #         cursor.execute(f"TRUNCATE TABLE {table_name};")
-        #         with open(f'{table_name}.csv', 'r',) as file:
-        #             cursor.execute("BEGIN;")
-        #             cursor.copy_expert(sql = f"COPY {table_name} FROM STDIN WITH DELIMITER E'\t' CSV HEADER;",file=file)
-        #         cursor.execute("COMMIT;")
-        #     except:
-        #         print(traceback.format_exc())
+        with db.bind.raw_connection().cursor() as cursor:
+            try:
+                cursor.execute(f"TRUNCATE TABLE {table_name};")
+                with open(f'{table_name}.csv', 'r',) as file:
+                    cursor.execute("BEGIN;")
+                    cursor.copy_expert(sql = f"COPY {table_name} FROM STDIN WITH DELIMITER E'\t' CSV HEADER;",file=file)
+                cursor.execute("COMMIT;")
+            except:
+                print(traceback.format_exc())
 
-        #         cursor.connection.rollback()
-        #     finally:
-        #         cursor.close()
-        #         os.remove(f'{table_name}.csv')
-        # print(f"{ctime()} - writing data to db ends")
+                cursor.connection.rollback()
+            finally:
+                cursor.close()
+                os.remove(f'{table_name}.csv')
+        print(f"{ctime()} - writing data to db ends")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-        df.head(1).to_sql(table_name,con=db.bind,if_exists='replace',index=False,method=None, chunksize=5000)
-        db.commit()
+        # df.head(1).to_sql(table_name,con=db.bind,if_exists='replace',index=False,method=None, chunksize=5000)
+        # db.commit()
 
 
     def save_table(self,df:pl.DataFrame,table_name:str,LIBRARY_NAME:str):
@@ -1246,7 +1304,7 @@ class OTB():
 
 # budget_gross_margin_percent       = (100*(budget_amount-BudgetCostofGoods))/budget_amount
 
-# COR_valueENDOfLifeStock           = (('StockatRetailPrice)/('StockatRetailPrice.sum())) * newValue
+# COR_EOLStock_value           = (('StockatRetailPrice)/('StockatRetailPrice.sum())) * newValue
 
 
 

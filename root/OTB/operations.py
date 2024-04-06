@@ -55,68 +55,70 @@ class Operations:
             original  = row[columnID]
         increase = newValue - original 
         if columnID == 'Logistic%':
-            try:
-                print("Child is", child)
-                print('Print_par', parent)
+            # DATA = DATA.with_columns(((pl.col('BudgetCostofGoods')-(pl.col('BudgetCostofGoods')*(pl.col('Logistic%')/100)))).alias('SupplyCost'))
+            # DATA = DATA.with_columns((((pl.col('budget_amount')-pl.col('SupplyCost'))*100)/pl.col('budget_amount')).alias('FirstMargin%'))
+            # DATA = DATA.with_columns(((pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))).alias('OTBorPurchaseCost'))
+            print("Logistic column is edited")
+            try:              
+
                 # DATA['Logistic%'].loc[child] = newValue
                 if child is None:
+                    # print(parent.value_counts(), 'parent_logistics')
+                    print('Logistic child is none')
                     DATA = DATA.with_columns((pl.lit(newValue).cast(pl.Float64)).alias('Logistic%'))
+                    
+                    DATA = DATA.with_columns(((pl.col('BudgetCostofGoods')-(pl.col('BudgetCostofGoods')*(pl.col('Logistic%')/100)))).alias('SupplyCost'))
+                    DATA = DATA.with_columns((((pl.col('budget_amount')-pl.col('SupplyCost'))*100)/pl.col('budget_amount')).alias('FirstMargin%'))
+                    DATA = DATA.with_columns(((pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))).alias('OTBorPurchaseCost'))
                 else:
-                    Logistic = (row['Logistic%']*newValue)/100
-                    if parent is None: Logistic_sum = DATA['Logistic%'].sum()
-                    else : Logistic_sum = DATA.filter(list(parent))['Logistic%']
-                    if Logistic < Logistic_sum:
-                        newValue = (100*Logistic)/Logistic_sum
-                if (len(columns_to_filter)):
-
                     data_child = DATA.filter(list(child))
-                # print(DATA.head(), "logistic")
-                # print('child', child, list(child), "child list")
-                # print('filterd data with list of child', DATA.filter(list(child)))
+                    data_child = data_child.with_columns((pl.lit(newValue).cast(pl.Float64)).alias('Logistic%'))
+                    data_child = data_child.with_columns(((pl.col('BudgetCostofGoods')-(pl.col('BudgetCostofGoods')*(pl.col('Logistic%')/100)))).alias('SupplyCost'))
+                    data_child = data_child.with_columns((((pl.col('budget_amount')-pl.col('SupplyCost'))*100)/pl.col('budget_amount')).alias('FirstMargin%'))
+                    data_child = data_child.with_columns(((pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))).alias('OTBorPurchaseCost'))
+                    
                     data_other = DATA.filter(list(child.not_()))
-#--------------------------------child None--------------------------------------
-                # data_child = data_child.with_columns((pl.lit(newValue).cast(pl.Float64)).alias('Logistic%'))
-#---------------------------------------------------------------------------------
-                    DATA = pl.concat([data_child,data_other])
-                    print(DATA, "Concated Logistic%")
-                # print('concated data', pl.concat([data_child,data_other]))
+
+                    DATA = pl.concat([data_child, data_other])
+
+#                     
             except Exception as e:
                 print(f"Error Logistic_p is: {e}")
                 # DATA['Logistic%'] = newValue
                 DATA = DATA.with_columns(pl.lit(newValue).alias('Logistic%'))
 
-        if columnID == 'DisplayItem':
+        if columnID == 'DisplayItemQty':
             try:
-                # DATA['DisplayItem'].loc[child] = drill_down_display(DATA.loc[child],columnID,newValue)
+                # DATA['DisplayItemQty'].loc[child] = drill_down_display(DATA.loc[child],columnID,newValue)
                 DATA_child = DATA.filter(list(child))
                 DATA_non_child = DATA.filter(list(child.not_()))
-                print(drill_down_display(DATA.filter(list(child)),columnID,newValue), 'drill_dw_dis of DisplayItem')
+                print(OTB.drill_down_display(DATA.filter(list(child)),columnID,newValue), 'drill_dw_dis of DisplayItem')
                 DATA_child = DATA_child.with_columns(DisplayItem = OTB.drill_down_display(DATA.filter(list(child)),columnID,newValue))
                 DATA = pl.concat([DATA_child,DATA_non_child])
                 print(DATA, "Concated DisplayItem")
 
                 # try:
-                #     DATA['DisplayItem'].loc[child] = newValue
+                #     DATA['DisplayItemQty'].loc[child] = newValue
                 # except:
-                #     DATA['DisplayItem'] = newValue
+                #     DATA['DisplayItemQty'] = newValue
             except Exception as e:
 
                 print(f"Error DisplayItem is: {e}")
                 # DATA = DATA.with_columns(DisplayItem = OTB.drill_down_display(DATA,columnID,newValue))
                 DATA = DATA.with_columns(DisplayItem = (pl.col('initial_average_retail_price')/pl.col('initial_average_retail_price').sum()).replace({np.inf:0,-np.inf:0}).fill_nan(0)*newValue)
 
-                # DATA['DisplayItem'].value_counts().write_csv('stretpr.csv')
-                # print(DATA.select(pl.col(['initial_average_retail_price', 'DisplayItem']).sum()), newValue, 'xxxxxx')
-                print(DATA['DisplayItem'].sum(), 'Disscplay')
-                # print(DATA['DisplayItem'].value_counts())
+                # DATA['DisplayItemQty'].value_counts().write_csv('stretpr.csv')
+                # print(DATA.select(pl.col(['initial_average_retail_price', 'DisplayItemQty']).sum()), newValue, 'xxxxxx')
+                print(DATA['DisplayItemQty'].sum(), 'Disscplay')
+                # print(DATA['DisplayItemQty'].value_counts())
         # if columnID == 'adjusted_budget_gross_margin_percent':
         #     DATA['adjusted_budget_gross_margin_percent'].loc[child] = newValue
         
-        if columnID == 'COR_valueENDOfLifeStock':
+        if columnID == 'COR_EOLStock_value':
             # try:
             # print(child,'child')
                             
-            # DATA['COR_valueENDOfLifeStock'].loc[child] = drill_down_cor(DATA.loc[child],columnID,newValue)
+            # DATA['COR_EOLStock_value'].loc[child] = drill_down_cor(DATA.loc[child],columnID,newValue)
             data1 = DATA.group_by(list(set(['Channel'])))#.agg(agg_dict) # ,  maintain_order = True
             for name, data in data1:
                 print(name)
@@ -124,7 +126,7 @@ class Operations:
                 print(data.select(pl.col(['Channel', 'ProposedSellThru%', 'PurchaseRetailValueatGrossSale', 'TYForecast', 'OTBorPurchaseCost', 'PurchasedRetailValueGrossSale']).sum()), 'corr')
            
             try:
-                print(DATA['COR_valueENDOfLifeStock'].filter(list(child)), 'ccch')
+                print(DATA['COR_EOLStock_value'].filter(list(child)), 'ccch')
                 
                 DATA_child = DATA.filter(list(child))
                 DATA_non_child = DATA.filter(list(child.not_()))
@@ -132,24 +134,24 @@ class Operations:
                 # df = df.with_columns(columnID = pl.col('StockatRetailPrice').cast(pl.Float64)/pl.col('StockatRetailPrice').cast(pl.Float64).fill_nan(0).sum()) * int(newValue)
                 DATA_child = DATA_child.with_columns((((pl.col('StockatRetailPrice')/pl.col('StockatRetailPrice').sum())).replace({np.inf:0,-np.inf:0}).fill_nan(0).cast(pl.Float64) * newValue).alias(columnID))
 
-                # DATA_child = DATA_child.with_columns(COR_valueENDOfLifeStock = OTB.drill_down_cor(DATA.filter(list(child)),columnID,newValue))
+                # DATA_child = DATA_child.with_columns(COR_EOLStock_value = OTB.drill_down_cor(DATA.filter(list(child)),columnID,newValue))
                 # print(OTB.drill_down_cor(DATA.filter(list(child)),columnID,newValue), 'drill_dw_cor of DisplayItem')
-                DATA_non_child = DATA_non_child.with_columns(COR_valueENDOfLifeStock = pl.col('COR_valueENDOfLifeStock').cast(pl.Float64))
+                DATA_non_child = DATA_non_child.with_columns(COR_EOLStock_value = pl.col('COR_EOLStock_value').cast(pl.Float64))
                 DATA = pl.concat([DATA_child,DATA_non_child])
-                print(DATA, 'Concated COR_valueENDOfLifeStock')
-            # print(DATA['COR_valueENDOfLifeStock'].loc[child],'TABLEDATA')
+                print(DATA, 'Concated COR_EOLStock_value')
+            # print(DATA['COR_EOLStock_value'].loc[child],'TABLEDATA')
             
-            # print(DATA['COR_valueENDOfLifeStock'].sum(),'DATAFiltercor')
+            # print(DATA['COR_EOLStock_value'].sum(),'DATAFiltercor')
             # except:
-            #     DATA['COR_valueENDOfLifeStock'] = newValue
+            #     DATA['COR_EOLStock_value'] = newValue
             except Exception as e:
                 print('Exception CoRR', e, traceback.format_exc())#.replace({np.inf:0,-np.inf:0}).fill_nan(0).cast(pl.Int32) * newValue
                 DATA = DATA.with_columns((((pl.col('StockatRetailPrice')/pl.col('StockatRetailPrice').sum()).replace({np.inf:0,-np.inf:0}).fill_nan(0)) * newValue).alias(columnID))
                 print(newValue, 'news')
-                # DATA['COR_valueENDOfLifeStock'].value_counts().write_csv('stretpr.csv')
-                # DATA = DATA.with_columns((pl.lit(newValue)).alias('COR_valueENDOfLifeStock'))
+                # DATA['COR_EOLStock_value'].value_counts().write_csv('stretpr.csv')
+                # DATA = DATA.with_columns((pl.lit(newValue)).alias('COR_EOLStock_value'))
                 print(DATA[columnID].sum(), DATA['StockatRetailPrice'].sum(), 'sto,cor')
-                # print(f"Error COR_valueENDOfLifeStock is: {e}")
+                # print(f"Error COR_EOLStock_value is: {e}")
         if columnID == 'Markdown%':
             try:
                 # DATA['Markdown%'].loc[child] = newValue
@@ -167,11 +169,19 @@ class Operations:
                 DATA = DATA.with_columns(pl.lit(newValue).alias('Markdown%'))
                 print(DATA, "Markdown except %")
         if columnID == 'ProposedSellThru%':
+            # print(DATA['initial_average_retail_price'].sum(), 'init_av_ret_price')
+            # print(DATA['PurchaseRetailValueatGrossSale'].is_null().sum(), 'PurchaseRetailValueatGrossSale')
+            # print(DATA['PurchasedRetailValueGrossSale'].is_null().sum(), 'PurchaseRetailValueGrossSale')
+            
             try:
                 # DATA['ProposedSellThru%'].loc[child] = newValue
                 data_child = DATA.filter(list(child))
                 data_other = DATA.filter(list(child.not_()))
                 data_child = data_child.with_columns((pl.lit(newValue).cast(pl.Float64)).alias('ProposedSellThru%'))
+                
+                data_child =data_child.with_columns(PurchasedRetailValueGrossSale = pl.col('budget_amount')/(1-((100-pl.col('ProposedSellThru%'))/100)))
+                data_child =data_child.with_columns(PurchaseRetailValueatGrossSale = pl.col('PurchasedRetailValueGrossSale')-pl.col('TYForecast'))
+                data_child =data_child.with_columns(OTBorPurchaseCost = pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))
                 # print(set(data_child.columns)-set(data_other.columns),'yyyy')
                 # print(set(data_other.columns)-set(data_child.columns))
                 DATA = pl.concat([data_child,data_other])
@@ -186,22 +196,32 @@ class Operations:
                 
 
         if columnID == 'act_forecast_vs_budget_percent':
-            print('Column_id is BudgetvsACT_FCT')
+            print(f'Column_id is:: {columnID}')
+            print(newValue, 'newvalue')
+
             budget_amount = (newValue*row['ACT_FCT'])/100
             print(budget_amount, 'New_bud_amnt')
-            # if child is None:
-            #     DATA = DATA.with_columns(act_forecast_vs_budget_percent = (DATA["act_forecast_vs_budget_percent"] * newValue)/100)
-            #     budget_amount_sum = DATA['budget_amount'].sum()
-            # else:
-            if parent is None: 
-                print('There is no parent')
-                budget_amount_sum = DATA['budget_amount'].sum()
-            else:
-                print('There is parent::', parent) 
-                budget_amount_sum = DATA.filter(list(parent))['budget_amount'].sum()
+
+            print(child.value_counts(), 'child_act_fct')
+            print(other_filter_condition.value_counts(), 'other_act_fct')
+            print('There is parent::', parent) 
+            budget_amount_sum = DATA['budget_amount'].sum()
             # newValue = (DATA.loc[child]['RelativeBudget%'].sum()*budget_amount)/DATA.loc[child]['budget_amount'].sum()
             newValue = (100*budget_amount)/budget_amount_sum
             columnID = 'budget_percent'
+            data_child = DATA.filter(list(child))
+            data_other = DATA.filter(list(child.not_()))
+            # DATA = OTB.change_percent(grouped_df=DATA.filter(list(child)), other_grouped_df=DATA.filter(list(other_filter_condition)), increase=increase, colID=columnID)
+
+            # data_child = data_child.with_columns((pl.lit(newValue).cast(pl.Float64)).alias('act_forecast_vs_budget_percent'))
+            # data_child = data_child.with_columns(((pl.col('act_forecast_vs_budget_percent')*pl.col('sales_actual'))/100).alias('budget_amount')) 
+            # data_child = data_child.with_columns(((pl.col('budget_amount')/pl.col('budget_amount').sum())*100).alias('budget_percent'))
+
+            # DATA = pl.concat([data_child, data_other])
+            
+            # print(DATA.select(pl.all().is_null().sum()).to_dicts()[0], 'print the nulls od DATA after edited')
+            # print(DATA['act_forecast_vs_budget_percent'].value_counts(), 'the data after agg')
+
         if columnID == 'budget_qty':
             # budget_amount = newValue*row['Price']
             budget_amount = newValue*row['initial_average_retail_price']
@@ -268,7 +288,7 @@ class Operations:
                 DATA_parent = OTB.change_percent(grouped_df = DATA.filter(list(child)), other_grouped_df = DATA.filter(list(other_filter_condition)), increase = increase, colID = columnID)
                 DATA_siblings = DATA.filter(list(parent.not_()))
                 DATA = pl.concat([DATA_siblings,DATA_parent])
-        elif columnID not in ['Logistic%','DisplayItem','adjusted_budget_gross_margin_percent','COR_valueENDOfLifeStock','Markdown%','ProposedSellThru%', 'Check_box']:
+        elif columnID not in ['Logistic%','DisplayItemQty','adjusted_budget_gross_margin_percent','COR_EOLStock_value','Markdown%','ProposedSellThru%', 'Check_box']:
             print(columnID)
             if len(columns_to_filter) == 1:
                 print('len of col to filter is:', 1)
@@ -294,8 +314,9 @@ class Operations:
             DATA = DATA.with_columns(((DATA['budget_amount']/DATA['budget_amount'].sum())*100).alias("relative_budget_percent"))
 
             # DATA['Budget vs ACT/FCT'] = (100*DATA['budget_amount'])/DATA['ACT_FCT']
-            DATA = DATA.with_columns(((pl.col('budget_amount')/pl.col("sales_actual"))*100).alias("act_forecast_vs_budget_percent"))
-
+           #------------------ 
+            # DATA = DATA.with_columns(((pl.col('budget_amount')/pl.col("sales_actual")).replace({np.inf:0,-np.inf:0}).fill_nan(0)*100).alias("act_forecast_vs_budget_percent"))
+           #-----------------------
             # DATA['adjusted_budget_gross_margin_percent'] = ((DATA['budget_amount']-DATA['BudgetCostofGoods'])/DATA['budget_amount'])*100
             DATA = DATA.with_columns((((pl.col('budget_amount') - pl.col('BudgetCostofGoods'))/pl.col('budget_amount'))*100).alias('adjusted_budget_gross_margin_percent'))
             # DATA['BudgetCostofGoods'] = (DATA['budget_amount']-(DATA['budget_amount']*DATA['adjusted_budget_gross_margin_percent'])/100)
@@ -312,13 +333,14 @@ class Operations:
             # DATA['OTBorPurchaseCost'] = DATA['PurchaseRetailValueatGrossSale'] * ((100 - DATA['FirstMargin%']))/100
             DATA = DATA.with_columns(((pl.col('PurchaseRetailValueatGrossSale')*(100 - pl.col('FirstMargin%')))).alias('OTBorPurchaseCost'))
 
-        elif columnID == 'Logistic%':
+    #    elif columnID == 'Logistic%':
             # DATA['SupplyCost'] = DATA['BudgetCostofGoods'] - (DATA['BudgetCostofGoods']*(DATA['Logistic%']/100))
-            DATA = DATA.with_columns(((pl.col('BudgetCostofGoods')-(pl.col('BudgetCostofGoods')*(pl.col('Logistic%')/100)))).alias('SupplyCost'))
             # DATA['FirstMargin%'] = 100*(DATA['budget_amount']-DATA['SupplyCost'])/DATA['budget_amount']
-            DATA = DATA.with_columns((((pl.col('budget_amount')-pl.col('SupplyCost'))*100)/pl.col('budget_amount')).alias('FirstMargin%'))
             # DATA['OTBorPurchaseCost'] = DATA['PurchaseRetailValueatGrossSale'] * ((100 - DATA['FirstMargin%']))/100
-            DATA = DATA.with_columns(((pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))).alias('OTBorPurchaseCost'))
+            
+            # DATA = DATA.with_columns(((pl.col('BudgetCostofGoods')-(pl.col('BudgetCostofGoods')*(pl.col('Logistic%')/100)))).alias('SupplyCost'))
+            # DATA = DATA.with_columns((((pl.col('budget_amount')-pl.col('SupplyCost'))*100)/pl.col('budget_amount')).alias('FirstMargin%'))
+            # DATA = DATA.with_columns(((pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))).alias('OTBorPurchaseCost'))
         
         
 
@@ -337,40 +359,40 @@ class Operations:
             # DATA['OTBorPurchaseCost'] = DATA['PurchaseRetailValueatGrossSale'] * ((100 - DATA['FirstMargin%']))/100
             DATA =DATA.with_columns(OTBorPurchaseCost = (pl.col('PurchasedRetailValueGrossSale')*(100-pl.col('FirstMargin%'))))
         
-        elif columnID == 'ProposedSellThru%':
+        # elif columnID == 'ProposedSellThru%':
 
-            # DATA['PurchasedRetailValueGrossSale'] = DATA['GrossSales'] * DATA['ProposedSellThru%']
-            # DATA['GrossSales'] = DATA['PurchasedRetailValueGrossSale']/DATA['ProposedSellThru%']
-            # DATA['Markdown%'] = (DATA['GrossSales'] - DATA['budget_amount'])/DATA['GrossSales']
-            # DATA['PurchasedRetailValueGrossSale'] = DATA['budget_amount'] / (DATA['ProposedSellThru%'].replace(0,pd.NA)/100)
-            #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # DATA['PurchasedRetailValueGrossSale'] = DATA['budget_amount'] / (1 - ((100 - data['ProposedSellThru%']) / 100))
-            DATA =DATA.with_columns(PurchasedRetailValueGrossSale = pl.col('budget_amount')/(1-((100-pl.col('ProposedSellThru%'))/100)))
-            # DATA['PurchaseRetailValueatGrossSale']= DATA['PurchasedRetailValueGrossSale']   - DATA['TYForecast']
-            DATA =DATA.with_columns(PurchaseRetailValueatGrossSale = pl.col('PurchasedRetailValueGrossSale')-pl.col('TYForecast'))
-            # DATA['OTBorPurchaseCost'] = DATA['PurchaseRetailValueatGrossSale'] * ((100 - DATA['FirstMargin%']))/100
-            DATA =DATA.with_columns(OTBorPurchaseCost = pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))
+        #     # DATA['PurchasedRetailValueGrossSale'] = DATA['GrossSales'] * DATA['ProposedSellThru%']
+        #     # DATA['GrossSales'] = DATA['PurchasedRetailValueGrossSale']/DATA['ProposedSellThru%']
+        #     # DATA['Markdown%'] = (DATA['GrossSales'] - DATA['budget_amount'])/DATA['GrossSales']
+        #     # DATA['PurchasedRetailValueGrossSale'] = DATA['budget_amount'] / (DATA['ProposedSellThru%'].replace(0,pd.NA)/100)
+        #     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #     # DATA['PurchasedRetailValueGrossSale'] = DATA['budget_amount'] / (1 - ((100 - data['ProposedSellThru%']) / 100))
+        #     DATA =DATA.with_columns(PurchasedRetailValueGrossSale = pl.col('budget_amount')/(1-((100-pl.col('ProposedSellThru%'))/100)))
+        #     # DATA['PurchaseRetailValueatGrossSale']= DATA['PurchasedRetailValueGrossSale']   - DATA['TYForecast']
+        #     DATA =DATA.with_columns(PurchaseRetailValueatGrossSale = pl.col('PurchasedRetailValueGrossSale')-pl.col('TYForecast'))
+        #     # DATA['OTBorPurchaseCost'] = DATA['PurchaseRetailValueatGrossSale'] * ((100 - DATA['FirstMargin%']))/100
+        #     DATA =DATA.with_columns(OTBorPurchaseCost = pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))
             
-        elif columnID == 'DisplayItem':
-            # DATA = DATA.with_columns((pl.col('DisplayItem') * pl.col('initial_average_retail_price')).alias('DisplayItemValue'))
+        elif columnID == 'DisplayItemQty':
+            # DATA = DATA.with_columns((pl.col('DisplayItemQty') * pl.col('initial_average_retail_price')).alias('DisplayItemValue'))
             DATA = DATA.with_columns(initial_average_retail_price = pl.col('initial_average_retail_price').replace({np.inf:0,-np.inf:0}).fill_nan(0))
             # DATA = DATA.with_columns(pl.col())
-            DATA = DATA.with_columns(DisplayItemValue = pl.col('DisplayItem')*pl.col('initial_average_retail_price'))
-            # DATA['TYForecast'] = DATA['StockatRetailPrice'] - DATA['DisplayItemValue'] - DATA['COR_valueENDOfLifeStock']
-            DATA = DATA.with_columns(TYForecast = pl.col('StockatRetailPrice')- pl.col('DisplayItemValue')-pl.col('COR_valueENDOfLifeStock'))
-            # print(DATA.select(pl.col(['StockatRetailPrice', 'DisplayItemValue', 'COR_valueENDOfLifeStock']).sum()), 'st__disp')
+            DATA = DATA.with_columns(DisplayItemValue = pl.col('DisplayItemQty')*pl.col('initial_average_retail_price'))
+            # DATA['TYForecast'] = DATA['StockatRetailPrice'] - DATA['DisplayItemValue'] - DATA['COR_EOLStock_value']
+            DATA = DATA.with_columns(TYForecast = pl.col('StockatRetailPrice')- pl.col('DisplayItemValue')-pl.col('COR_EOLStock_value'))
+            # print(DATA.select(pl.col(['StockatRetailPrice', 'DisplayItemValue', 'COR_EOLStock_value']).sum()), 'st__disp')
             # DATA['PurchaseRetailValueatGrossSale'] = DATA['PurchasedRetailValueGrossSale'] - DATA['TYForecast']
             DATA = DATA.with_columns(PurchaseRetailValueatGrossSale = pl.col('PurchasedRetailValueGrossSale')-pl.col('TYForecast'))
             # DATA['OTBorPurchaseCost'] = DATA['PurchaseRetailValueatGrossSale'] * ((100 - DATA['FirstMargin%']))/100
             DATA = DATA.with_columns(OTBorPurchaseCost=pl.col('PurchaseRetailValueatGrossSale')*((100-pl.col('FirstMargin%'))))
             
-        elif columnID == 'COR_valueENDOfLifeStock':
+        elif columnID == 'COR_EOLStock_value':
             try:
                 # if child:
                 print('we are here')
-                # DATA['TYForecast'] = DATA['StockatRetailPrice']- DATA['DisplayItemValue']- DATA['COR_valueENDOfLifeStock'].astype(float)
-                DATA = DATA.with_columns(TYForecast = pl.col('StockatRetailPrice')-pl.col('DisplayItemValue')-pl.col('COR_valueENDOfLifeStock').cast(pl.Float64))
-                print(DATA.select(pl.col(["TYForecast", 'StockatRetailPrice', 'DisplayItemValue', 'COR_valueENDOfLifeStock']).sum()), 'TYgaa')
+                # DATA['TYForecast'] = DATA['StockatRetailPrice']- DATA['DisplayItemValue']- DATA['COR_EOLStock_value'].astype(float)
+                DATA = DATA.with_columns(TYForecast = pl.col('StockatRetailPrice')-pl.col('DisplayItemValue')-pl.col('COR_EOLStock_value').cast(pl.Float64))
+                print(DATA.select(pl.col(["TYForecast", 'StockatRetailPrice', 'DisplayItemValue', 'COR_EOLStock_value']).sum()), 'TYgaa')
                 # data['PurchasedRetailValueGrossSale']  = data['PurchaseRetailValueatGrossSale']+data['TYForecast']
                 # DATA = DATA.with_columns(PurchasedRetailValueGrossSale = pl.col('PurchaseRetailValueatGrossSale')+pl.col('TYForecast'))
                 DATA = DATA.with_columns(PurchasedRetailValueGrossSale = (pl.col('gross_sales') * (pl.col('ProposedSellThru%'))/100).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
@@ -423,7 +445,7 @@ class Operations:
         # data1 = DATA.group_by(list(set(['Channel'])))#.agg(agg_dict) # ,  maintain_order = True
         # for name, data in data1:
         #     print(name)
-        #     print(data['COR_valueENDOfLifeStock'].sum(), 'ggggggg')
+        #     print(data['COR_EOLStock_value'].sum(), 'ggggggg')
         secondary = data_filter['secondary_filter']
         scores_m = secondary['article_score']
         print(scores_m, 'scoresss')
@@ -640,7 +662,7 @@ class Operations:
                 #     print(name)
                 #     print(dat.select(pl.col(['Channel', 'ProposedSellThru%', 'PurchaseRetailValueatGrossSale', 'TYForecast', 'OTBorPurchaseCost', 'PurchasedRetailValueGrossSale'])), 'xxx')
                 
-                print(data.select(pl.col(['Channel', 'COR_valueENDOfLifeStock', 'PurchaseRetailValueatGrossSale', 'PurchasedRetailValueGrossSale', 'ProposedSellThru%', 'initial_average_retail_price', 'Markdown%', 'TYForecast', 'OTBorPurchaseCost']).sum()))
+                print(data.select(pl.col(['Channel', 'COR_EOLStock_value', 'PurchaseRetailValueatGrossSale', 'PurchasedRetailValueGrossSale', 'ProposedSellThru%', 'initial_average_retail_price', 'Markdown%', 'TYForecast', 'OTBorPurchaseCost']).sum()))
                 # print(DATA.select())
                 #calculate subfilters options
                 # Budget.SUB_FILTER = Budget.call_filter(datas,Budget.SUB_FILTER,group,DATA,Budget.filter_store)    

@@ -119,7 +119,8 @@ async def user_want_revised_amount(update:bool = True):
         print(data_.columns, 'columns_of_data_to_transfer len > 1')
         # bulks of primals
         # we got serious
-        revised_otb_to_update = data_.filter(list(existing_child)).select(pl.col(['revised_otb_amount', group[0], 'otb_amount']))
+        columns_to_select = ['revised_otb_amount', 'otb_amount'] + group
+        revised_otb_to_update = data_.filter(list(existing_child)).select(pl.col(columns_to_select))
         new_revised['revised_otb'] = revised_otb_to_update        
         # Also the flag works here
         do_revise = True
@@ -150,8 +151,8 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
     while True:
         data_filter = await websocket.receive_json()
         filters = Filters(**data_filter)
-        # print(data_filter,"DATAFILTER")
-        #print(filters)
+        # print(data_filter,"DFD")
+        # print(filters)
         secondary = data_filter['secondary_filter']
         group_by_id = Echelons(**secondary)
         print(group_by_id, 'Itemwise grouping')
@@ -166,11 +167,9 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
             DATA = form_base_data(DATA)
             DATA = inititalize_columns(DATA,gloabal_vars)
             DATA,ds = Otb.initial_frame_calculation(DATA)
+
             do_revise_dict['do_revise'] = False
             revised_otb_to_update = None
-
-            # print(DATA.columns,"DATAAA")
-
 
             if filters.sku !=[]:
                 print("user selected the the ITEMID we need to destribute")
@@ -192,35 +191,11 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
                 DATA_2 = DATA.clone() # Used for itemcode logic and otb destribution
 
             else:
-                # mean_cols = [f"pl.col('{col}').mean()" for col in avg_col]
-                # sums_cols = [f"pl.col('{col}').sum()" for col in sum_col]
-                # maxs_cols = [f"pl.col('{col}').max()" for col in list(set(max_col)-set(["ITEMID"]))]
-                # kpi_cols =[f"pl.col('{col}').max()" for col in kpi_col]
-                # dist_cols = [f"pl.col('{col}').sum()" for col in ['new_otb_mix','revised_otb_amount'] if col in DATA.columns]
-                # art_cols = [f"pl.col('{col}').mean()" for a,col in art.items() if col in scores_m]
-                # cumulatives_1 = [f"pl.col('{col}').mean()" for col in ['coefficient_score'] if len(art_cols)!=0]
-                # cumulatives_2 = [f"pl.col('{col}').sum()" for col in ['coefficient_score_mix_percent'] if len(art_cols)!=0]
-                # agg_dict = [eval(expr) for expr in maxs_cols + sums_cols+mean_cols+kpi_cols + dist_cols +art_cols +cumulatives_1+cumulatives_2]
-            
+           
                 # create new column order index
-                # print(art_cols,"AGGREGATIONART")
-                # print(DATA.columns,"First_data columns")
-                # print(DATA.columns,"second_data columns")
                 DATA = DATA.with_columns(order_index=pl.lit(0))
                 DATA_2 = DATA.clone()
-                print(DATA.columns,"DATACOLUMN2")
-                
-                # Addon data for KPI check selection
-                DATA_KPI = DATA.clone()
-
-        # DATA = data
         data = DATA
-        print(data.columns,"small_data columns")
-        # print(data_filter,"DATAFILTER")
-
-        print(data.columns,"DATACOLUMN2")
-        # sub_data = DATA 
-
         print(scores_m,"SCORE") 
         global group
         group = []
@@ -228,8 +203,6 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
         filter_condition = None 
         # print(DATA.columns,"DATASbeforesecondary")
         TEMP['key'] = DATA
-        print(TEMP['key']['otb_amount'].sum(), 'temp key 1')
-        print(DATA['otb_amount'].sum(), 'temp key after org DATA')
         
         if filter_condition is not None:
             DATA = DATA.with_columns(filter_index=filter_condition)
@@ -242,9 +215,7 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
             DATA = Otb.call_kpi(DATA, data_filter) 
 
         if data_filter['table_changes'] != {}:
-            
             row = data_filter["table_changes"]["row"]
-            print('table_change_row_is', row)
             columnID = data_filter["table_changes"]["columnId"]
             newValue = data_filter["table_changes"]["newValue"]
             
@@ -262,8 +233,6 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
             
 #**************************************************************otb_check_box*****************************************************************            
             if columnID =="Check_box":
-                # newValue = data_filter["table_changes"]["newValue"]
-                # newValue = newValue_box
                 selected_row = data_filter['table_changes']["row"]
                 print(selected_row,"SELECT")
 
@@ -478,6 +447,8 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
         print(data.columns,"DATACOLUMN4")
 
         if data_filter["expand"]['status']:
+            limit = 0
+
             print(group, 'in exp status')    
             print('we are in expand status')
            
@@ -486,8 +457,11 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
                                 sub_filter_state, group,filter_condition)
             
             data = Operations.apply_expand_heirarchy(DATA, data_filter, sub_filter_state, group, filters, heirarchy,limit, filter_condition)
- 
- 
+            if scores_m != []:
+                print(data['article_score_sale'].sum(), 'sum_of_art_score_scale_2')
+                print(data["coefficient_score"].sum(), 'sum_of_coeff_score_2')
+                print(data['article_score_sale'].mean(), 'mean_of_art_score_scale_2')
+                print(data["coefficient_score"].mean(), 'mean_of_coeff_score_2')
         try:
             Channel_flag =False
             
@@ -498,7 +472,12 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
 
             data,dtemp,Channel_flag = Otb.calculate_df(data,ds,Channel_flag) 
             print(group, 'group from processes')
-
+            # if scores_m != []:
+            #     print(data['article_score_sale'].sum(), 'sum_of_art_score_scale_3')
+            #     print(data["coefficient_score"].sum(), 'sum_of_coeff_score_3')
+            #     print(data['article_score_sale'].mean(), 'mean_of_art_score_scale_3')
+            #     print(data["coefficient_score"].mean(), 'mean_of_coeff_score_3')
+ 
             # print(filters, 'fflt')
             if data_filter["group_by"]["status"] == True or (data_filter["expand"]["status"] == True and data_filter['table_changes'] == {}) or filters.sku !=[]:
                 data_kpi = data.clone()
@@ -541,7 +520,7 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
                 data = kp_Operations.user_uncheck_kpi_selection(data, child, newValue_kpi)
             # Here we store our data we need to update
             if 'revised_otb_amount' in data.columns:
-                want_to_update_new_otb_mix['update'] = data
+                want_to_update_new_otb_mix['update'] = data.fill_nan(0)
             # And we get do_revise flag from /update_otb_amount
             print(do_revise_dict['do_revise'], 'the_do revise flag')
             #!!!!!!!!!!!
@@ -569,17 +548,27 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
                     print(new_revised['revised_otb'].columns, 'the saved rev otb data cols')
                     print(new_revised['revised_otb'], 'the saved mix data')
                     #------------------------need to 
-                    # user_selected_rows_ = new_revised['revised_otb'].filter(new_revised['revised_otb'][list(row)[0]] == row[list(row)[0]])['revised_otb_amount'].item()
-                    # data = data.with_columns(otb_amount = (data['otb_percent'] * user_selected_rows_)/100)
+                    user_selected_rows_ = new_revised['revised_otb'].filter(new_revised['revised_otb'][list(row)[0]] == row[list(row)[0]])['revised_otb_amount']
+                    if len(user_selected_rows_)>1:
+                        user_selected_rows_ = user_selected_rows_[0].item()
+                    else:
+                        user_selected_rows_.item()
+                    print(user_selected_rows_, 'user_selected_rows_')
+                    print(data.select(['otb_amount' ,'otb_percent']))
+                    # if data['otb_percent'].sum() == 0:
+                    #     data = data.with_columns(otb_percent = 100/len(data))
+                    #     data = data.with_columns(otb_amount = (data['otb_percent'] * user_selected_rows_)/100)
+                    # else:
+                    data = data.with_columns(otb_amount = (data['otb_percent'] * user_selected_rows_)/100)
                     #------------------------need to
                     filter_condition,sub_filter_state,group = Otb.apply_secondary_filters(DATA,filters,sub_filter_state,group,filter_condition)
                     DATA = kp_Operations.destribute_otb_total(new_revised['revised_otb'], DATA, group, data_filter, heirarchy, sub_filter_state)
                     do_revise_dict['do_revise'] = False
-                                   
+            # KPI int part ends here                                   
             else:
                 pass
             if 'renewed_otb_percent' in data.columns:
-                print(data.select(pl.col(['renewed_otb_percent', 'revised_otb_amount', 'new_otb_mix'])), 'at last')
+                print(data.select(pl.col(['renewed_otb_percent', 'revised_otb_amount', 'new_otb_mix', 'otb_amount', 'otb_percent'])), 'at last')
             #!!!!!!!!!!!
             data = Otb.calculate_margin(data)
             data = Otb.calculate_quantity(data)
@@ -595,7 +584,7 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
                         [f"pl.col('{col}').max()" for col in kpi_col if col in data.columns] +
                         [f"pl.col('{col}').max()" for col in rank_col if col in data.columns] +
                         [f"pl.col('{col}').mean()" for a,col in art.items() if col in scores_m] +
-                        [f"pl.col('{col}').sum()" for col in ['coefficient_score'] if len(art_cols)!=0]+
+                        [f"pl.col('{col}').mean()" for col in ['coefficient_score'] if len(art_cols)!=0]+
                         [f"pl.col('{col}').sum()" for col in ['coefficient_score_mix_percent'] if len(art_cols)!=0] + 
                         [f"pl.col('{col}').sum()" for col in ['new_otb_mix','revised_otb_amount'] if col in data.columns]
                         ]
@@ -632,6 +621,7 @@ async def get_data_ws(websocket: WebSocket,  db: Session = Depends(get_db)):
         print(TEMP['key']['otb_amount'].sum(), 'temp key 2')
 
         print(type(DATA),"DATATYPE")
+
         size = len(data) 
         if size == 1:
             editable_cols = json.dumps(["otb_amount","otb_vs_py_percent","otb_vs_ppy_percent"])

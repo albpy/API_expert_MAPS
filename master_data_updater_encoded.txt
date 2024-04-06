@@ -1,0 +1,6 @@
+
+encode :: openssl enc -aes-256-cbc -in master_data_updater.py -out encrypted_master_data_updater.enc
+
+passwd::azurecred
+
+decode : openssl enc -d -aes-256-cbc -in encrypted_master_data_updater.enc -out master_data_updater.py

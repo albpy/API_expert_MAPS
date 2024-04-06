@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=bmaps
+      - POSTGRES_USER=rebo
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - bmaps_api_postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/usr/src/bmaps_api/sql/init.sql
+    container_name: BMAPS_DB
+
+  api:
+    build: .
+    command: /usr/src/bmaps_api/start.sh
+    depends_on:
+      - db
+    environment:
+      - ALLOW_ORIGIN=http://localhost:8090
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=bmaps
+      - POSTGRES_USER=rebo
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "8050:3000"
+    mem_limit: 2G
+    cpu_count: 8
+    container_name: BMAPS_API
+
+volumes:
+  bmaps_api_postgres_data:

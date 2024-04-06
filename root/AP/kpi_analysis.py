@@ -19,7 +19,7 @@ class kp_Operations:
         #--------------
         otb_amount_summation = DATA['otb_amount'].sum()
         #--------------
-        print(otb_amount_summation, 'otb_amount_summation')
+        print(otb_amount_summation, 'otb_amount_summation_1')
         print(child, 'child in calculate revised budget')
         print(type(child), 'child in calculate revised budget')
 
@@ -58,7 +58,7 @@ class kp_Operations:
        
         print((DATA['otb_percent']-DATA['renewed_otb_percent']).sum(), 'cdsdsdfsdfsdfds')        
 
-        DATA = DATA.with_columns(revised_otb_amount = (pl.col('new_otb_mix')* (pl.col('otb_amount').sum()))/100)
+        DATA = DATA.with_columns(revised_otb_amount = (pl.col('new_otb_mix')* (pl.col('otb_amount').sum())).fill_nan(0).fill_null(0).replace({np.inf:0, -np.inf:0})/100)
 
         print(child.value_counts(), 'chuld')
 
@@ -133,11 +133,6 @@ class kp_Operations:
 
             return kpi_child, group
 
-
-    def expand_hierarchy():
-
-        
-        return DATA, data, filter_condition
 
 
     def destribute_otb_(self, the_value :int|pl.Series|float, DATA : pl.DataFrame, group : list, data_filter :dict, heirarchy : list, sub_filter_state : bool):
@@ -266,14 +261,7 @@ class kp_Operations:
                     DATA = pl.concat(lst_whl)
                     summation = DATA["otb_amount"].sum()
                     DATA = DATA.with_columns(otb_percent = (pl.col('otb_amount')/pl.col('otb_amount').sum()).fill_nan(0).fill_null(0).replace({np.inf:0, -np.inf:0}))
-                # else:
-
-
-                # DATA_parent = Otb.change_percent(grouped_df=DATA.filter(list(child)),other_grouped_df=DATA.filter(list(other_filter_condition)),increase= increase, colID= 'otb_amount')
-                # DATA_siblings = DATA.filter(list(parent.not_()))
-                # DATA = pl.concat([DATA_siblings,DATA_parent])
-                # summation = DATA["otb_amount"].sum()
-                # DATA = DATA.with_columns(((DATA["otb_amount"]/summation)*100).alias('otb_percent'))
+        
 
         else:
             print('sub_filter_state is false')
@@ -295,7 +283,7 @@ class kp_Operations:
 
                     minor =  DATA[heirarchy[Level_to_destribute]] == neonate
                     others = DATA[heirarchy[Level_to_destribute]] != neonate
-                    print(DATA.filter(minor)['Channel'].max())
+                    print(DATA.filter(minor)['Channel'].max(), 'maximum_channel')
                     print(DATA.filter(minor)['otb_amount'].sum(), 'checking otb amount matches the data otb amount')
                     the_new_value = values.filter(values[heirarchy[Level_to_destribute]]==neonate)['revised_otb_amount'].item()
                     print(the_new_value, 'new_vals')
@@ -303,19 +291,37 @@ class kp_Operations:
                     print(old_otb_amount, 'old_vals')
                     
                     increase = the_new_value - float(old_otb_amount)
+                    print(increase, 'increse_distribute_total_no_sfs')
                     grouped_df = DATA.filter(list(minor))
                     summation = grouped_df['otb_amount'].fill_nan(0).sum()
-                    grouped_df = grouped_df.with_columns((grouped_df['otb_amount'] + (grouped_df['otb_amount']*increase)/summation).alias('otb_amount'))
+                    print(summation, 'sum_distribute_total_no_sfs')
+                    lst_gpd = grouped_df['otb_amount'].to_list()
+                
+                    # if summation == 0:
+                    #     grouped_df = grouped_df.with_columns(((pl.lit(increase)/len(grouped_df)).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('otb_amount'))
+                    # else:
+                    grouped_df = grouped_df.with_columns(((grouped_df['otb_amount'] + (grouped_df['otb_amount']*increase)/summation).replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0)).alias('otb_amount'))
+                    
+                    print(grouped_df['otb_amount'].describe(), 'the_grouped_description_2')
                     lst_whl.append(grouped_df)
                     other_grouped_df=DATA.filter(list(others))
         
                 DATA = pl.concat(lst_whl)
+                DATA = DATA.with_columns(pl.col("otb_amount").replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
+                DATA = DATA.with_columns(pl.col("otb_percent").replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
+
                 summation = DATA["otb_amount"].sum()
+                print(DATA["otb_amount"], 'otb_amount_description')
+                print(summation, 'otb_percent_description')
+                print(DATA['otb_percent'].describe(), 'otb_amount_summation_2')
+
                 DATA = DATA.with_columns(otb_percent = (pl.col('otb_amount')/pl.col('otb_amount').sum()).fill_nan(0).fill_null(0).replace({np.inf:0, -np.inf:0}))
                 # DATA = DATA.with_columns(((DATA["otb_amount"]/summation)*100).alias('otb_percent'))
+                print(DATA['otb_percent'].describe(), 'otb_amount_summation_22')
             else:
                 print('len(columns_to_filter) is other')
                 print(columns_to_filter, 'columns_to filter2')
+                lst_whl = []
 
                 ''' to manage more than 1 inner block,if more than 1 group'''
                 for neonate in values[heirarchy[Level_to_destribute]]:

@@ -46,11 +46,12 @@ class Parameters:
                 "otb_vs_act_forecast_percent_ly", "sales_actual",
                 "net_sales_ly","net_sales_lly",
                 "act_forecast_vs_ly_percent", "budget_amount", "budget_cost", "budget_qty", "budget_amount_ly", 'budget_amount_lly',
-                "StockatRetailPrice", "stock_on_hand_qty", "stock_cost_ly", "sold_article_count_ly", 'sold_article_count_lly',
-                'article_score_sale', 'article_score_abc', 'article_score_ae', 'article_score_speed', 'article_score_terminal', 'article_score_margin', 'article_score_sell', 'article_score_markdown', 'article_score_core', 
-                'article_score_quartile', 'article_score_sortimeter', 'coefficient_score', 'coefficient_score_mix_percent', 
+                "StockatRetailPrice", "stock_on_hand_qty", "sold_article_count_ly", 'sold_article_count_lly', 
                 'stock_qty_actual', 'stock_qty_ly', 'stock_qty_lly',
-                'stock_retail_actual', 'stock_retail_ly', 'stock_retail_lly', 'stock_cost_actual', 'stock_cost_ly', 'stock_cost_lly'] 
+                'stock_retail_actual', 'stock_retail_ly', 'stock_retail_lly', 'stock_cost_actual', 'stock_cost_ly', 'stock_cost_lly', 
+                'article_score_sale', 'article_score_abc', 'article_score_ae', 'article_score_speed', 'article_score_terminal', 'article_score_margin', 
+                'article_score_sell', 'article_score_markdown', 'article_score_core', 
+                'article_score_quartile', 'article_score_sortimeter', 'coefficient_score', 'coefficient_score_mix_percent'] 
 
     other_cols = ["cost_act_forecast_vs_ly_percent", "relative_otb_percent", "margin_act_forecast_vs_ly_percent", "quantity_act_forecast_vs_ppy_percent", "margin_otb_vs_sku", "lly_margin_percent", 
     "otb_vs_sku_qty", "otb_percent","sales_act_vs_forecast","Check_box"]    
@@ -241,7 +242,6 @@ class Otb():
     article_score = gloabal_vars.article_score
     art = gloabal_vars.SCORES
 
-
     hier_ap = gloabal_vars.hier_ap
 
 
@@ -286,15 +286,17 @@ class Otb():
         #                   Fill NoneTypes with zero
         df = df.with_columns(pl.col(gloabal_vars.max_col).fill_null(0))
         df = df.with_columns(pl.col(list(self.art.values())).replace({np.inf:0, -np.inf:0}).fill_null(0).fill_nan(0))
+        
         # print(df['Channel'].value_counts().glimpse(), 'channel counts')
         # print(df['Family'].value_counts().glimpse(), 'channel counts')
         # print(df['SubFamily'].value_counts().glimpse(), 'channel counts')
         # print(df['Supplier'].value_counts().glimpse(), 'channel counts')
-
-        # df = df.with_columns((pl.lit(0.0)).alias("coefficient_score"))
+        df = df.with_columns(pl.col(gloabal_vars.max_col).fill_null(0))
+        df = df.with_columns(pl.col("otb_amount").replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
+        df = df.with_columns(pl.col("otb_percent").replace({np.inf:0, -np.inf:0}).fill_nan(0).fill_null(0))
 
         df = df.with_columns((pl.col("otb_amount") - (pl.col("units_buy_by_sku") * pl.col("initial_average_retail_price"))).fill_nan(0).alias("deficit"))
-
+        print(len(df),"LENGTH")
         df= df.with_columns((pl.struct(subset).is_first_distinct().cast(pl.Int8).alias("total_sku_count")))
         df= df.with_columns((pl.col("sold_qty_ly").sum().over(subset) * pl.col("total_sku_count")).gt(0).cast(pl.Int8).alias("sold_article_count_ly"))
         df= df.with_columns((pl.col("quantity_ppy").sum().over(subset) * pl.col("total_sku_count")).gt(0).cast(pl.Int8).alias("sold_article_count_lly"))
@@ -454,7 +456,7 @@ class Otb():
 
         Channel_flag = False
        
-        data = data.with_columns(((pl.col('otb_amount')*100)/pl.col('otb_amount').sum()).alias("otb_percent"))
+        data = data.with_columns((((pl.col('otb_amount')*100)/pl.col('otb_amount').sum()).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias("otb_percent"))
         data = data.with_columns(pl.col("initial_average_retail_price").alias("initial_average_retail_price"))
         data = data.with_columns((pl.col("otb_amount") + pl.col("sales_actual")).alias("sales_act_vs_forecast"))
         data = data.with_columns((((pl.col("otb_amount")*100) / pl.col("sales_act_vs_forecast").replace(0,np.nan)).fill_null(0)).fill_nan(0).alias("otb_vs_act_forecast_percent"))
@@ -462,23 +464,23 @@ class Otb():
         data = data.with_columns(((pl.col("otb_amount")*100)/pl.col("net_sales_lly")).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0).alias("otb_vs_ppy_percent"))
         data = data.with_columns(pl.col("initial_average_retail_price").replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0))
         data = data.with_columns(((pl.col("otb_amount") * 100) / pl.col("initial_average_retail_price").replace(0,np.nan)).fill_null(0).alias("units_buy_by_sku"))
-        data = data.with_columns((pl.col("otb_amount") / pl.col("total_sku_count").replace(0,np.nan)).fill_null(0).alias("otb_vs_sku"))
+        data = data.with_columns((((pl.col("otb_amount") / pl.col("total_sku_count")).replace({np.inf:0.0, -np.inf:0.0})).fill_null(0).fill_nan(0)).alias("otb_vs_sku"))
         data = data.with_columns(net_sales_ly = pl.col("net_sales_ly").fill_null(0))
         data = data.with_columns(net_sales_lly = pl.col("net_sales_lly"))
-        data = data.with_columns(((pl.col("sales_act_vs_forecast")*100)/pl.col("net_sales_ly")).alias("act_forecast_vs_ly_percent"))
-        data = data.with_columns((pl.col('stock_qty_actual')*(pl.col('sales_actual')/pl.col('quantity_actuals'))).alias('stock_retail_actual'))
+        data = data.with_columns((((pl.col("sales_act_vs_forecast")*100)/pl.col("net_sales_ly")).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias("act_forecast_vs_ly_percent"))
+        data = data.with_columns(((pl.col('stock_qty_actual')*(pl.col('sales_actual')/pl.col('quantity_actuals'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('stock_retail_actual'))
 
-        data = data.with_columns((pl.col('stock_qty_ly')*(pl.col('net_sales_ly')/pl.col('sold_qty_ly'))).alias('stock_retail_ly'))
-        data = data.with_columns((pl.col('stock_qty_lly')*(pl.col('net_sales_lly')/pl.col('quantity_ppy'))).alias('stock_retail_lly'))
+        data = data.with_columns(((pl.col('stock_qty_ly')*(pl.col('net_sales_ly')/pl.col('sold_qty_ly'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('stock_retail_ly'))
+        data = data.with_columns(((pl.col('stock_qty_lly')*(pl.col('net_sales_lly')/pl.col('quantity_ppy'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('stock_retail_lly'))
         
-        data = data.with_columns((pl.col('cost_actuals')/pl.col('quantity_actuals')).alias('unit_cost_actual'))
-        data = data.with_columns((pl.col('unit_cost_actual')*(pl.col('stock_retail_actual')/pl.col('quantity_ppy'))).alias('stock_cost_actual'))
+        data = data.with_columns(((pl.col('cost_actuals')/pl.col('quantity_actuals')).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('unit_cost_actual'))
+        data = data.with_columns(((pl.col('unit_cost_actual')*(pl.col('stock_retail_actual')/pl.col('quantity_ppy'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('stock_cost_actual'))
         
-        data = data.with_columns((pl.col('cost_of_goods_ly')/pl.col('sold_qty_ly')).alias('unit_cost_ly'))
-        data = data.with_columns((pl.col('unit_cost_ly')*(pl.col('stock_retail_ly')/pl.col('quantity_ppy'))).alias('stock_cost_ly'))
+        data = data.with_columns(((pl.col('cost_of_goods_ly')/pl.col('sold_qty_ly')).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('unit_cost_ly'))
+        data = data.with_columns(((pl.col('unit_cost_ly')*(pl.col('stock_retail_ly')/pl.col('quantity_ppy'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('stock_cost_ly'))
 
-        data = data.with_columns((pl.col('cost_of_goods_lly')/pl.col('quantity_ppy')).alias('unit_cost_lly'))
-        data = data.with_columns((pl.col('unit_cost_lly')*(pl.col('stock_retail_lly')/pl.col('quantity_ppy'))).alias('stock_cost_lly'))
+        data = data.with_columns(((pl.col('cost_of_goods_lly')/pl.col('quantity_ppy')).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('unit_cost_lly'))
+        data = data.with_columns(((pl.col('unit_cost_lly')*(pl.col('stock_retail_lly')/pl.col('quantity_ppy'))).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias('stock_cost_lly'))
 
         return data,ds,Channel_flag 
     
@@ -1036,7 +1038,7 @@ class Otb():
               
                 df = df.with_columns(((pl.col("coefficient_score")/average_len).cast(pl.Float64).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0)).alias("coefficient_score"))
                 df = df.with_columns(coefficient_score_mix_percent = (pl.col('coefficient_score')/pl.col('coefficient_score').sum()).replace({np.inf:0,-np.inf:0}).fill_nan(0).fill_null(0) * 100)
-                
+
             except Exception as e:
 
                 print(f"Error:{e}")
